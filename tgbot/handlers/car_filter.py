@@ -1,17 +1,14 @@
 from aiogram import Router, F, Dispatcher
 from aiogram.filters import Command
-from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InputMediaPhoto
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from services.crud.car import CarCRUD
 from states.car_filter import CarFilterForm
 
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import Message, CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from sqlalchemy import select
+from models.config_reader import Settings
 
 
 async def start_filter(msg: Message, state: FSMContext):
@@ -54,11 +51,17 @@ async def process_filter_notes(msg: Message, state: FSMContext, db: AsyncSession
     await state.update_data(notes=notes)
     filters = await state.get_data()
 
-    admin_chat_id = -4588244738 #!!!!!!!
+    config = Settings()
+    admin_chat_id = config.ADMIN_CHAT_ID
 
     await msg.bot.send_message(
         chat_id=admin_chat_id,
-        text=f"Фильтры клиента: {filters}"
+        text=f"Фильтры клиента\n\n"
+             f"Марка: {filters['brand']}\n"
+             f"Модель: {filters['model']}\n"
+             f"Год выпуска: {filters['year']}\n"
+             f"Цена: {filters['price']}\n"
+             f"Дополнительно: {filters['notes']}\n"
     )
 
     await search_cars(filters, msg, state, db)

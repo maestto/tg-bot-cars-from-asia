@@ -3,7 +3,6 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardB
 
 
 async def main_menu(msg: Message):
-    print(msg.chat.id)
     text = "🔹 Главное меню\n\nВыберите действие:"
     keyboard = ReplyKeyboardMarkup(
         keyboard=[

@@ -20,12 +20,7 @@ async def command_start(msg: types.Message, db: AsyncSession, state: FSMContext)
         await main_menu(msg)
 
 
-async def set_admin_chat(msg: types.Message, db: AsyncSession, state: FSMContext):
-    await msg.reply("Chat ID: " + str(msg.chat.id))
-
-
 def register_handlers_common(dp: Dispatcher):
     router = Router(name=__name__)
     router.message.register(command_start, Command("start"), StateFilter("*"))
-    router.message.register(set_admin_chat, Command("chat"), StateFilter("*"))
     dp.include_router(router)

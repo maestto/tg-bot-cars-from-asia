@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     PG_DSN: PostgresDsn
     REDIS_DSN: RedisDsn
     LOGGING_MODE: str
+    ADMIN_CHAT_ID: str
 
     def debug_status(self):
         return True if self.LOGGING_MODE == "DEBUG" else False
