@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 from alembic import context
 from tgbot.models.config_reader import Settings
 from tgbot.models.db.user import User
+from tgbot.models.db.car import Car
 from tgbot.models.db.base import Base
 
 # this is the Alembic Config object, which provides

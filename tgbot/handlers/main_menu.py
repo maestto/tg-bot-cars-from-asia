@@ -1,11 +1,19 @@
 from aiogram import Dispatcher, Router, F
-from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton
 
 
 async def main_menu(msg: Message):
-    text = "🔹 Главное меню"
-    await msg.answer(text=text)
+    print(msg.chat.id)
+    text = "🔹 Главное меню\n\nВыберите действие:"
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="Добавить машину")],
+            [KeyboardButton(text="Список машин")],
+            [KeyboardButton(text="Найти машину")]
+        ],
+        resize_keyboard=True
+    )
+    await msg.answer(text=text, reply_markup=keyboard)
 
 
 async def main_menu_callback(call: CallbackQuery):
