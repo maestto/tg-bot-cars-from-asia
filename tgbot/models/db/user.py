@@ -1,6 +1,6 @@
 from sqlalchemy import Integer, BigInteger, String
 from sqlalchemy.orm import Mapped, mapped_column
-from models.db.base import Base
+from tgbot.models.db.base import Base
 
 
 class User(Base):

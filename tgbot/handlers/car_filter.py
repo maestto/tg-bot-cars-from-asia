@@ -1,14 +1,10 @@
 from aiogram import Router, F, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from sqlalchemy.ext.asyncio import AsyncSession
+from aiogram.types import Message
 
-from services.crud.car import CarCRUD
-from states.car_filter import CarFilterForm
-
-from aiogram.types import Message, CallbackQuery
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from models.config_reader import Settings
+from states.car_filter import CarFilterForm
 
 
 async def start_filter(msg: Message, state: FSMContext):
@@ -46,7 +42,7 @@ async def process_filter_price(msg: Message, state: FSMContext):
     await state.set_state(CarFilterForm.notes)
 
 
-async def process_filter_notes(msg: Message, state: FSMContext, db: AsyncSession):
+async def process_filter_notes(msg: Message, state: FSMContext):
     notes = msg.text.strip()
     await state.update_data(notes=notes)
     filters = await state.get_data()
@@ -63,67 +59,16 @@ async def process_filter_notes(msg: Message, state: FSMContext, db: AsyncSession
              f"Цена: {filters['price']}\n"
              f"Дополнительно: {filters['notes']}\n"
     )
-
-    await search_cars(filters, msg, state, db)
-
-
-async def search_cars(filters: dict, msg: Message, state: FSMContext, db: AsyncSession):
-    car_crud = CarCRUD(db)
-    cars = await car_crud.filter_cars(filters)
-
-    if cars:
-        await send_car_list(msg, cars)
-    else:
-        await msg.answer("Нет автомобилей, соответствующих вашим фильтрам.")
-    await state.clear()
-
-
-async def send_car_list(msg: Message, cars: list, page: int = 1, per_page: int = 5):
-    start = (page - 1) * per_page
-    end = start + per_page
-    cars_page = cars[start:end]
-
-    if not cars_page:
-        await msg.answer("Нет автомобилей на этой странице.")
-        return
-
-    builder = InlineKeyboardBuilder()
-    for car in cars_page:
-        builder.button(
-            text=f"{car.brand} {car.model} ({car.year}) - {car.price}₽",
-            callback_data=f"car_{car.id}"
-        )
-
-    if page > 1:
-        builder.button(text="⬅️ Назад", callback_data=f"cars_page_{page - 1}")
-    if end < len(cars):
-        builder.button(text="➡️ Вперед", callback_data=f"cars_page_{page + 1}")
-
-    builder.adjust(1)
-    await msg.answer("Список автомобилей:", reply_markup=builder.as_markup())
-
-
-async def show_car_details(call: CallbackQuery, car_id: int, db: AsyncSession):
-    car = CarCRUD(db)
-    car = await car.get_car_by_id(car_id)
-    if car:
-        await call.message.answer_photo(
-            photo=car.photo_file_id,
-            caption=f"Модель: {car.brand} {car.model}\n"
-                    f"Год: {car.year}\n"
-                    f"Цена: {car.price}₽"
-        )
-    else:
-        await call.message.answer("Машина не найдена.")
+    await msg.answer("Ваш запрос отправлен, скоро вам будут предложены варианты")
 
 
 def register_car_filter_handlers(dp: Dispatcher):
     router = Router(name=__name__)
     router.message.register(start_filter, Command("filter"))
+    router.message.register(start_filter, F.text == "Найти машину")
     router.message.register(process_filter_brand, CarFilterForm.brand)
     router.message.register(process_filter_model, CarFilterForm.model)
     router.message.register(process_filter_year, CarFilterForm.year)
     router.message.register(process_filter_price, CarFilterForm.price)
     router.message.register(process_filter_notes, CarFilterForm.notes)
-    router.callback_query.register(show_car_details, F.data.startswith("view_car_"))
     dp.include_router(router)

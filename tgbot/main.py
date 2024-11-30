@@ -1,19 +1,17 @@
 import asyncio
-from loguru import logger
-from aiogram import Bot, Dispatcher
-from aiogram.types import BotCommand
-from aiogram.fsm.storage.redis import RedisStorage
-from aiogram.client.default import DefaultBotProperties
-from sqlalchemy.orm import close_all_sessions
-from middlewares.db import DBMiddleware
-from utils import logging
-from utils.register_handlers import register_handlers
-from models.config_reader import Settings
-from models.db.base import create_pool
 
-# ??
-from dotenv import load_dotenv
-load_dotenv()
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import BotCommand
+from loguru import logger
+from sqlalchemy.orm import close_all_sessions
+
+from tgbot.middlewares.db import DBMiddleware
+from tgbot.models.config_reader import Settings
+from tgbot.models.db.base import create_pool
+from tgbot.utils import logging
+from tgbot.utils.register_handlers import register_handlers
 
 
 async def main():

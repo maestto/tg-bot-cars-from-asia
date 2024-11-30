@@ -6,8 +6,6 @@ async def main_menu(msg: Message):
     text = "🔹 Главное меню\n\nВыберите действие:"
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Добавить машину")],
-            [KeyboardButton(text="Список машин")],
             [KeyboardButton(text="Найти машину")]
         ],
         resize_keyboard=True

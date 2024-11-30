@@ -1,6 +1,6 @@
 from sqlalchemy import Integer, String, Float
 from sqlalchemy.orm import Mapped, mapped_column
-from models.db.base import Base
+from tgbot.models.db.base import Base
 
 
 class Car(Base):
