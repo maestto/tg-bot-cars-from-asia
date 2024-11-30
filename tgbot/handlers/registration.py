@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from handlers.main_menu import main_menu
-from services.crud.user import User as UserCrud
-from states.registration import Registration
+from tgbot.handlers.main_menu import main_menu
+from tgbot.services.crud.user import User as UserCrud
+from tgbot.states.registration import Registration
 
 
 async def start(msg: types.Message, state: FSMContext):

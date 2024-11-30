@@ -1,6 +1,7 @@
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
-from models.db.user import User as UserModel
+
+from tgbot.models.db.user import User as UserModel
 
 
 class User:

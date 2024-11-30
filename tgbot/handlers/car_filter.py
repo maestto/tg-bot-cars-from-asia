@@ -3,8 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from models.config_reader import Settings
-from states.car_filter import CarFilterForm
+from tgbot.models.config_reader import Settings
+from tgbot.states.car_filter import CarFilterForm
 
 
 async def start_filter(msg: Message, state: FSMContext):
