@@ -11,34 +11,32 @@ from tgbot.states.registration import Registration
 async def start(msg: types.Message, state: FSMContext):
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="Поделиться номером", request_contact=True)]
+            [KeyboardButton(text="Поделиться номером ⬆️", request_contact=True)]
         ],
         resize_keyboard=True
     )
-    await msg.answer("Пожалуйста, поделитесь своим номером телефона:", reply_markup=keyboard)
+    await msg.answer("🔹 Пожалуйста, поделитесь своим номером телефона", reply_markup=keyboard)
     await state.set_state(Registration.waiting_for_phone_number)
 
 
 async def handle_phone_number(msg: types.Message, state: FSMContext):
     contact = msg.contact
-    if contact:
-        await state.update_data(tg_id=contact.user_id, phone_number=contact.phone_number)
-        await msg.answer("Введите, пожалуйста, ваше ФИО:")
+    if contact.user_id != msg.from_user.id:
+        await msg.answer("Пришлите свой контакт!")
+        return
+    await state.update_data(phone_number=contact.phone_number)
+    await msg.answer("🔹 Введите, пожалуйста, ваше ФИО:")
     await state.set_state(Registration.waiting_for_name)
 
 
 async def handle_name(msg: types.Message, db: AsyncSession, state: FSMContext):
     name = msg.text
-
     data = await state.get_data()
-    tg_id = data["tg_id"]
     phone_number = data["phone_number"]
-
     user_crud = UserCrud(db=db)
-
-    await user_crud.insert_user(tg_id=tg_id, phone_number=phone_number, name=name)
+    await user_crud.insert_user(tg_id=msg.from_user.id, phone_number=phone_number, name=name)
     await user_crud.commit()
-    await msg.answer("Регистрация завершена! Спасибо.")
+    await msg.answer("✅ Регистрация завершена!")
     await main_menu(msg)
     await state.clear()
 

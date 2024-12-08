@@ -15,10 +15,10 @@ class User:
         curr = await self.db.execute(query)
         return curr.scalar_one()
 
-    async def insert_user(self, name: str, phone_number: str, tg_id: int):
-        user = UserModel(name=name, phone_number=phone_number, tg_id=tg_id)
+    async def insert_user(self, tg_id: int, name: str, phone_number: str):
+        user = UserModel(tg_id=tg_id, full_name=name, phone_number=phone_number)
         self.db.add(user)
-        return user.id
+        return user
 
     async def get_user(self, user_tg_id: int) -> UserModel:
         query = select(UserModel).filter(UserModel.tg_id == user_tg_id)

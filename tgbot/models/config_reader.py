@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     BOT_TOKEN: SecretStr
+    BOT_USERNAME: str
     PG_DSN: PostgresDsn
     REDIS_DSN: RedisDsn
     LOGGING_MODE: str

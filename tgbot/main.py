@@ -8,6 +8,7 @@ from loguru import logger
 from sqlalchemy.orm import close_all_sessions
 
 from tgbot.middlewares.db import DBMiddleware
+from tgbot.middlewares.media_group import MediaGroupMiddleware
 from tgbot.models.config_reader import Settings
 from tgbot.models.db.base import create_pool
 from tgbot.utils import logging
@@ -32,6 +33,9 @@ async def main():
     db_middleware = DBMiddleware(db_pool)
     dp.message.middleware(db_middleware)
     dp.callback_query.middleware(db_middleware)
+    media_group_middleware = MediaGroupMiddleware()
+    dp.message.middleware(media_group_middleware)
+    dp.callback_query.middleware(media_group_middleware)
 
     register_handlers(dp)
 

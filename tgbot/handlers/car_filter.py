@@ -1,74 +1,63 @@
 from aiogram import Router, F, Dispatcher
-from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.models.config_reader import Settings
+from tgbot.services.crud.car_request import CarRequest
 from tgbot.states.car_filter import CarFilterForm
 
 
-async def start_filter(msg: Message, state: FSMContext):
-    await msg.answer("Введите марку автомобиля или отправьте 'пусто', если не хотите указывать:")
-    await state.set_state(CarFilterForm.brand)
+async def start_filter(call: CallbackQuery, state: FSMContext):
+    await call.message.edit_text("🔹 Введите марку, модель и год интересующего автомобиля")
+    await state.set_state(CarFilterForm.car_info)
+    await call.answer()
 
 
-async def process_filter_brand(msg: Message, state: FSMContext):
-    brand = msg.text.strip() or "пусто"
-    await state.update_data(brand=brand)
-    await msg.answer("Введите модель автомобиля или отправьте 'пусто', если не хотите указывать:")
-    await state.set_state(CarFilterForm.model)
-
-
-async def process_filter_model(msg: Message, state: FSMContext):
-    model = msg.text.strip() or "пусто"
-    await state.update_data(model=model)
-    await msg.answer("Введите год выпуска автомобиля или отправьте 'пусто':")
-    await state.set_state(CarFilterForm.year)
-
-
-async def process_filter_year(msg: Message, state: FSMContext):
-    year = msg.text.strip()
-    year = int(year) if year.isdigit() else "пусто"
-    await state.update_data(year=year)
-    await msg.answer("Введите максимальную цену автомобиля или отправьте 'пусто':")
+async def car_info_writen(msg: Message, state: FSMContext):
+    car_info = msg.text
+    await state.update_data(car_info=car_info)
+    await msg.answer("🔹 Введите ваш бюджет")
     await state.set_state(CarFilterForm.price)
 
 
 async def process_filter_price(msg: Message, state: FSMContext):
-    price = msg.text.strip()
-    price = float(price) if price.replace('.', '', 1).isdigit() else "пусто"
+    price = msg.text
     await state.update_data(price=price)
-    await msg.answer("Укажите дополнительные пожелания к автомобилю (текст) или отправьте 'пусто':")
-    await state.set_state(CarFilterForm.notes)
+    await msg.answer("🔹 Укажите дополнительные пожелания к автомобилю")
+    await state.set_state(CarFilterForm.additional_details)
 
 
-async def process_filter_notes(msg: Message, state: FSMContext):
-    notes = msg.text.strip()
-    await state.update_data(notes=notes)
-    filters = await state.get_data()
-
-    config = Settings()
-    admin_chat_id = config.ADMIN_CHAT_ID
-
+async def process_filter_notes(msg: Message, db: AsyncSession, state: FSMContext, config: Settings):
+    additional_details = msg.text
+    data = await state.update_data(additional_details=additional_details)
+    car_req_crud = CarRequest(db=db)
+    req_obj = car_req_crud.insert_car_request(tg_id=msg.from_user.id,
+                                              car_info=data['car_info'],
+                                              price=data['price'],
+                                              additional_details=additional_details,
+                                              )
+    await db.commit()
+    await db.refresh(req_obj)
+    kb = InlineKeyboardBuilder()
+    kb.button(text="Отправить вариант ⬆️",
+              url=f"tg://resolve?domain={config.BOT_USERNAME}&start={req_obj.id}")
     await msg.bot.send_message(
-        chat_id=admin_chat_id,
-        text=f"Фильтры клиента\n\n"
-             f"Марка: {filters['brand']}\n"
-             f"Модель: {filters['model']}\n"
-             f"Год выпуска: {filters['year']}\n"
-             f"Цена: {filters['price']}\n"
-             f"Дополнительно: {filters['notes']}\n"
+        chat_id=config.ADMIN_CHAT_ID,
+        text=f"🔹 Запрос клиента\n\n"
+             f"Данные по авто: {data['car_info']}\n"
+             f"Цена: {data['price']}\n"
+             f"Дополнительно: {additional_details}\n",
+        reply_markup=kb.as_markup()
     )
-    await msg.answer("Ваш запрос отправлен, скоро вам будут предложены варианты")
+    await msg.answer("✅ Ваш запрос отправлен, скоро вам будут предложены варианты")
 
 
 def register_car_filter_handlers(dp: Dispatcher):
     router = Router(name=__name__)
-    router.message.register(start_filter, Command("filter"))
-    router.message.register(start_filter, F.text == "Найти машину")
-    router.message.register(process_filter_brand, CarFilterForm.brand)
-    router.message.register(process_filter_model, CarFilterForm.model)
-    router.message.register(process_filter_year, CarFilterForm.year)
+    router.callback_query.register(start_filter, F.data == "car_request")
+    router.message.register(car_info_writen, CarFilterForm.car_info)
     router.message.register(process_filter_price, CarFilterForm.price)
-    router.message.register(process_filter_notes, CarFilterForm.notes)
+    router.message.register(process_filter_notes, CarFilterForm.additional_details)
     dp.include_router(router)

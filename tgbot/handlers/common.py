@@ -10,11 +10,8 @@ from tgbot.services.crud.user import User as UserCrud
 
 async def command_start(msg: types.Message, db: AsyncSession, state: FSMContext):
     await state.clear()
-    tg_id = msg.from_user.id
-
     user_crud = UserCrud(db=db)
-    exists = await user_crud.user_exists(tg_id)
-
+    exists = await user_crud.user_exists(msg.from_user.id)
     if not exists:
         await registration_start(msg, state)
     else:
