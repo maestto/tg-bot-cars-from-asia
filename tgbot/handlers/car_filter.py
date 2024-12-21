@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.models.config_reader import Settings
 from tgbot.services.crud.car_request import CarRequest
+from tgbot.services.crud.user import User as UserCrud
 from tgbot.states.car_filter import CarFilterForm
 
 
@@ -43,12 +44,16 @@ async def process_filter_notes(msg: Message, db: AsyncSession, state: FSMContext
     kb = InlineKeyboardBuilder()
     kb.button(text="Отправить вариант ⬆️",
               url=f"tg://resolve?domain={config.BOT_USERNAME}&start={req_obj.id}")
+    user_crud = UserCrud(db=db)
+    user = await user_crud.get_user(msg.from_user.id)
     await msg.bot.send_message(
         chat_id=config.ADMIN_CHAT_ID,
-        text=f"🔹 Запрос клиента\n\n"
-             f"Данные по авто: {data['car_info']}\n"
-             f"Цена: {data['price']}\n"
-             f"Дополнительно: {additional_details}\n",
+        text=f"🔹 Запрос клиента\n"
+             f"<b>ФИО:</b> {user.full_name}\n"
+             f"<b>Номер телефона:</b> <code>{user.phone_number}</code>\n\n"
+             f"<b>Данные по авто:</b> {data['car_info']}\n"
+             f"<b>Цена:</b> {data['price']}\n"
+             f"<b>Дополнительно:</b> {additional_details}\n",
         reply_markup=kb.as_markup()
     )
     await msg.answer("✅ Ваш запрос отправлен, скоро вам будут предложены варианты")

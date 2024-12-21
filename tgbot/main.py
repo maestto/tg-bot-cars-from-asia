@@ -35,7 +35,6 @@ async def main():
     dp.callback_query.middleware(db_middleware)
     media_group_middleware = MediaGroupMiddleware()
     dp.message.middleware(media_group_middleware)
-    dp.callback_query.middleware(media_group_middleware)
 
     register_handlers(dp)
 

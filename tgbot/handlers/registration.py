@@ -1,6 +1,7 @@
 from aiogram import types, Dispatcher, Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, ReplyKeyboardRemove
+from aiogram.utils import keyboard
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from tgbot.handlers.main_menu import main_menu
@@ -13,7 +14,7 @@ async def start(msg: types.Message, state: FSMContext):
         keyboard=[
             [KeyboardButton(text="Поделиться номером ⬆️", request_contact=True)]
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
     await msg.answer("🔹 Пожалуйста, поделитесь своим номером телефона", reply_markup=keyboard)
     await state.set_state(Registration.waiting_for_phone_number)
@@ -25,7 +26,7 @@ async def handle_phone_number(msg: types.Message, state: FSMContext):
         await msg.answer("Пришлите свой контакт!")
         return
     await state.update_data(phone_number=contact.phone_number)
-    await msg.answer("🔹 Введите, пожалуйста, ваше ФИО:")
+    await msg.answer("🔹 Введите, пожалуйста, ваше ФИО:", reply_markup=ReplyKeyboardRemove())
     await state.set_state(Registration.waiting_for_name)
 
 
